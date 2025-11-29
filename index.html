@@ -5,94 +5,143 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>終極密碼 - 語音版 Demo</title>
   <style>
+    :root {
+      color-scheme: dark;
+    }
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       margin: 0;
       padding: 16px;
-      background: #111827;
+      background: radial-gradient(circle at top, #1f2937 0, #020617 45%, #000 100%);
       color: #f9fafb;
     }
     h1 {
       font-size: 22px;
       margin-bottom: 12px;
+      text-align: left;
+      letter-spacing: 0.08em;
     }
     .card {
-      background: #1f2937;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 16px;
+      background: rgba(15,23,42,0.96);
+      border-radius: 18px;
+      padding: 16px 16px 18px;
+      margin: 0 auto 16px;
+      max-width: 420px;
+      box-shadow:
+        0 18px 40px rgba(0,0,0,0.55),
+        0 0 0 1px rgba(148,163,184,0.14);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(148,163,184,0.25);
     }
     label {
       display: block;
-      margin-top: 8px;
-      font-size: 14px;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #cbd5f5;
     }
     input[type="number"],
     input[type="text"],
     select {
       width: 100%;
-      padding: 8px 10px;
+      padding: 10px 12px;
       margin-top: 4px;
-      border-radius: 8px;
+      border-radius: 999px;
       border: 1px solid #4b5563;
-      background: #111827;
+      background: #020617;
       color: #f9fafb;
       box-sizing: border-box;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.2s;
+    }
+    input:focus,
+    select:focus {
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 1px #60a5fa55;
+      background: #020617;
     }
     .flex {
       display: flex;
-      gap: 8px;
+      gap: 10px;
     }
     .flex > div {
       flex: 1;
     }
     button {
-      padding: 10px 16px;
+      padding: 12px 18px;
       border-radius: 999px;
       border: none;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 600;
       cursor: pointer;
-      margin-top: 12px;
+      margin-top: 14px;
       margin-right: 8px;
+      transition: transform 0.06s ease-out, box-shadow 0.06s, background 0.15s;
+      white-space: nowrap;
     }
     button.primary {
-      background: #3b82f6;
+      background: linear-gradient(135deg, #2563eb, #38bdf8);
       color: #f9fafb;
+      box-shadow: 0 10px 22px rgba(37,99,235,0.55);
+    }
+    button.primary:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 4px 12px rgba(15,23,42,0.7);
     }
     button.secondary {
       background: #4b5563;
       color: #f9fafb;
     }
+    button.secondary:active {
+      transform: translateY(1px) scale(0.98);
+    }
     button.danger {
-      background: #ef4444;
+      background: linear-gradient(135deg, #ef4444, #f97316);
       color: #f9fafb;
+      box-shadow: 0 10px 22px rgba(248,113,113,0.55);
+    }
+    button.danger:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 4px 12px rgba(15,23,42,0.7);
     }
     button:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+      box-shadow: none;
+    }
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .btn-row-right {
+      margin-left: auto;
     }
     .status {
       font-size: 13px;
-      margin-top: 4px;
+      margin-top: 6px;
       color: #9ca3af;
+      min-height: 18px;
     }
     .voice-status {
-      margin-top: 8px;
+      margin-top: 10px;
       font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
     .dot {
       display: inline-block;
       width: 10px;
       height: 10px;
       border-radius: 50%;
-      margin-right: 6px;
-      vertical-align: middle;
       background: #6b7280;
+      flex-shrink: 0;
     }
     .dot.active {
       background: #22c55e;
-      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.3);
+      box-shadow: 0 0 0 5px rgba(34,197,94,0.33);
       animation: pulse 1s infinite;
     }
     @keyframes pulse {
@@ -101,28 +150,30 @@
       100% { transform: scale(1); opacity: 1; }
     }
     .transcript-box {
-      background: #030712;
-      border-radius: 8px;
+      background: #020617;
+      border-radius: 12px;
       padding: 8px 10px;
-      min-height: 40px;
+      min-height: 44px;
       margin-top: 6px;
       font-size: 15px;
       border: 1px dashed #4b5563;
       word-break: break-all;
+      line-height: 1.4;
     }
     .transcript-label {
       font-size: 13px;
-      color: #9ca3af;
-      margin-top: 6px;
+      color: #a5b4fc;
+      margin-top: 8px;
     }
     .range-display {
       font-size: 16px;
       font-weight: 600;
-      margin-top: 8px;
+      margin-top: 6px;
     }
     .player-display {
-      font-size: 16px;
+      font-size: 15px;
       margin-top: 4px;
+      color: #e5e7eb;
     }
     .hidden {
       display: none;
@@ -131,340 +182,92 @@
       color: #f87171;
       font-size: 13px;
       margin-top: 4px;
+      min-height: 16px;
     }
-  </style>
-</head>
-<body>
-  <h1>終極密碼（語音版 Demo）</h1>
-
-  <!-- 設定區 -->
-  <div class="card" id="setup-card">
-    <h2 style="font-size:18px; margin:0 0 8px;">遊戲設定</h2>
-
-    <label>
-      遊戲人數
-      <input type="number" id="player-count" min="1" max="8" value="2" />
-    </label>
-
-    <div id="player-names-wrapper"></div>
-
-    <div class="flex">
-      <div>
-        <label>
-          最小數字
-          <input type="number" id="min-number" value="0" />
-        </label>
-      </div>
-      <div>
-        <label>
-          最大數字
-          <input type="number" id="max-number" value="100" />
-        </label>
-      </div>
-    </div>
-
-    <label>
-      音效
-      <select id="sound-setting">
-        <option value="on">開啟</option>
-        <option value="off">關閉</option>
-      </select>
-    </label>
-
-    <button class="primary" id="start-game-btn">開始遊戲</button>
-    <div class="status" id="setup-status"></div>
-  </div>
-
-  <!-- 遊戲區 -->
-  <div class="card hidden" id="game-card">
-    <h2 style="font-size:18px; margin:0 0 8px;">遊戲進行中</h2>
-
-    <div class="range-display">
-      目前範圍：<span id="range-text"></span>
-    </div>
-    <div class="player-display">
-      輪到：<span id="current-player-name"></span>
-    </div>
-
-    <label style="margin-top:10px;">
-      目前猜測數字（可手動改）
-      <input type="number" id="guess-input" />
-    </label>
-
-    <!-- 語音控制 -->
-    <div class="voice-status">
-      <span class="dot" id="mic-dot"></span>
-      <span id="mic-status-text">尚未啟動麥克風</span>
-    </div>
-    <button class="secondary" id="toggle-voice-btn">啟動語音輸入</button>
-    <div class="error" id="voice-error"></div>
-
-    <div class="transcript-label">語音辨識文字：</div>
-    <div class="transcript-box" id="transcript-box"></div>
-
-    <button class="primary" id="confirm-number-btn">這個數字，確認！</button>
-    <button class="secondary" id="new-round-btn">再來一局</button>
-    <button class="danger" id="restart-btn">重新設定</button>
-
-    <div class="status" id="game-status"></div>
-  </div>
-
-  <script>
-    // ====== 動態玩家輸入欄位 ======
-    const playerCountInput = document.getElementById("player-count");
-    const playerNamesWrapper = document.getElementById("player-names-wrapper");
-
-    function renderPlayerInputs() {
-      const count = parseInt(playerCountInput.value, 10) || 1;
-      playerNamesWrapper.innerHTML = "";
-      for (let i = 0; i < count; i++) {
-        const label = document.createElement("label");
-        label.textContent = "玩家 " + (i + 1) + " 稱呼";
-        const input = document.createElement("input");
-        input.type = "text";
-        input.id = "player-name-" + i;
-        input.placeholder = "例如：Lin";
-        input.style.marginTop = "4px";
-        input.style.width = "100%";
-        input.style.padding = "8px 10px";
-        input.style.borderRadius = "8px";
-        input.style.border = "1px solid #4b5563";
-        input.style.background = "#111827";
-        input.style.color = "#f9fafb";
-        label.appendChild(document.createElement("br"));
-        label.appendChild(input);
-        playerNamesWrapper.appendChild(label);
-      }
+    /* 終極密碼卡牌 */
+    .secret-card-wrapper {
+      margin-top: 12px;
+      display: flex;
+      justify-content: flex-end;
     }
-
-    playerCountInput.addEventListener("change", renderPlayerInputs);
-    renderPlayerInputs(); // 初始渲染
-
-    // ====== 遊戲狀態 ======
-    const setupCard = document.getElementById("setup-card");
-    const gameCard = document.getElementById("game-card");
-    const setupStatus = document.getElementById("setup-status");
-    const gameStatus = document.getElementById("game-status");
-    const startGameBtn = document.getElementById("start-game-btn");
-    const restartBtn = document.getElementById("restart-btn");
-    const newRoundBtn = document.getElementById("new-round-btn");
-
-    const minNumberInput = document.getElementById("min-number");
-    const maxNumberInput = document.getElementById("max-number");
-    const soundSetting = document.getElementById("sound-setting");
-
-    const rangeText = document.getElementById("range-text");
-    const currentPlayerNameEl = document.getElementById("current-player-name");
-    const guessInput = document.getElementById("guess-input");
-
-    let players = [];
-    let min = 0;
-    let max = 100;
-    let secret = 0;
-    let currentPlayerIndex = 0;
-    let gameOver = false;
-
-    function speakText(text) {
-      if (!window.speechSynthesis) return;
-      if (soundSetting.value === "off") return;
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = "zh-TW";
-      window.speechSynthesis.speak(utter);
+    .secret-card {
+      width: 120px;
+      height: 64px;
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,0.4);
+      background: radial-gradient(circle at 0 0,#1e293b,#020617);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(15,23,42,0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.16s ease-out, box-shadow 0.16s;
     }
-
-    function updateRangeDisplay() {
-      rangeText.textContent = min + " ~ " + max;
+    .secret-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px rgba(15,23,42,0.95);
     }
-
-    function updateCurrentPlayerDisplay() {
-      currentPlayerNameEl.textContent = players[currentPlayerIndex];
+    .secret-label {
+      position: absolute;
+      top: 6px;
+      left: 10px;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #9ca3af;
     }
-
-    function nextPlayer() {
-      currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-      updateCurrentPlayerDisplay();
-      speakText("輪到 " + players[currentPlayerIndex] + "，請說出你的數字。");
+    .secret-value {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
     }
-
-    // 初始化單一局
-    function initRound() {
-      secret = Math.floor(Math.random() * (max - min + 1)) + min;
-      currentPlayerIndex = 0;
-      gameOver = false;
-      gameStatus.textContent = "";
-      guessInput.value = "";
-      updateRangeDisplay();
-      updateCurrentPlayerDisplay();
-
-      // 清空語音輸出
-      transcriptBox.textContent = "";
-      if (recognition && recognizing) {
-        recognition.stop();
-        toggleVoiceBtn.textContent = "啟動語音輸入";
-      }
-
-      speakText("新的一局開始。終極密碼在 " + min + " 到 " + max + " 之間。");
-      speakText("首先由 " + players[currentPlayerIndex] + " 開始，請說出你的數字。");
+    .secret-covered {
+      font-size: 13px;
+      color: #e5e7eb;
     }
-
-    // 開始遊戲：讀設定＋進入第一局
-    startGameBtn.addEventListener("click", () => {
-      const count = parseInt(playerCountInput.value, 10) || 1;
-      const tmpNames = [];
-      for (let i = 0; i < count; i++) {
-        const input = document.getElementById("player-name-" + i);
-        tmpNames.push(input.value.trim() || "玩家" + (i + 1));
-      }
-      const minVal = parseInt(minNumberInput.value, 10);
-      const maxVal = parseInt(maxNumberInput.value, 10);
-
-      if (isNaN(minVal) || isNaN(maxVal) || minVal >= maxVal) {
-        setupStatus.textContent = "請確認最小/最大數字設定正確（最小 < 最大）。";
-        return;
-      }
-
-      players = tmpNames;
-      min = minVal;
-      max = maxVal;
-
-      setupStatus.textContent = "";
-      setupCard.classList.add("hidden");
-      gameCard.classList.remove("hidden");
-
-      initRound();
-    });
-
-    // 再來一局：保留設定與玩家，只重置本局
-    newRoundBtn.addEventListener("click", () => {
-      if (!players.length) return;
-      initRound();
-    });
-
-    // 重新設定：整體歸零
-    restartBtn.addEventListener("click", () => {
-      window.location.reload();
-    });
-
-    // ====== 語音辨識（Web Speech API） ======
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const toggleVoiceBtn = document.getElementById("toggle-voice-btn");
-    const micDot = document.getElementById("mic-dot");
-    const micStatusText = document.getElementById("mic-status-text");
-    const transcriptBox = document.getElementById("transcript-box");
-    const voiceError = document.getElementById("voice-error");
-
-    let recognition = null;
-    let recognizing = false;
-
-    if (!SpeechRecognition) {
-      toggleVoiceBtn.disabled = true;
-      micStatusText.textContent = "此瀏覽器不支援語音辨識，請改用 Chrome / Edge。";
-      voiceError.textContent = "";
-    } else {
-      recognition = new SpeechRecognition();
-      recognition.lang = "zh-TW";
-      recognition.continuous = true;
-      recognition.interimResults = true;
-
-      recognition.onstart = () => {
-        recognizing = true;
-        micDot.classList.add("active");
-        micStatusText.textContent = "正在聽你說話，請說出數字。";
-        voiceError.textContent = "";
-      };
-
-      recognition.onerror = (event) => {
-        voiceError.textContent = "語音辨識發生錯誤：" + event.error;
-      };
-
-      recognition.onend = () => {
-        recognizing = false;
-        micDot.classList.remove("active");
-        micStatusText.textContent = "語音辨識已停止。";
-      };
-
-      recognition.onresult = (event) => {
-        let finalTranscript = "";
-        let interimTranscript = "";
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const result = event.results[i];
-          const text = result[0].transcript.trim();
-          if (result.isFinal) {
-            finalTranscript += text + " ";
-          } else {
-            interimTranscript += text + " ";
-          }
-        }
-
-        transcriptBox.textContent = finalTranscript || interimTranscript;
-
-        // 從語音文字中抓第一個數字
-        const combined = (finalTranscript || interimTranscript).replace(/[^0-9]/g, " ");
-        const parts = combined.split(" ").filter(Boolean);
-        if (parts.length > 0) {
-          const num = parseInt(parts[0], 10);
-          if (!isNaN(num)) {
-            guessInput.value = num;
-          }
-        }
-      };
-
-      toggleVoiceBtn.addEventListener("click", () => {
-        if (!recognizing) {
-          try {
-            recognition.start();
-            toggleVoiceBtn.textContent = "停止語音輸入";
-          } catch (e) {
-            // 重複 start 可能丟錯，忽略即可
-          }
-        } else {
-          recognition.stop();
-          toggleVoiceBtn.textContent = "啟動語音輸入";
-        }
-      });
+    .secret-cover-strip {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        135deg,
+        rgba(30,64,175,0.4) 0,
+        rgba(30,64,175,0.4) 6px,
+        rgba(15,23,42,0.98) 6px,
+        rgba(15,23,42,0.98) 12px
+      );
+      opacity: 0.9;
+      pointer-events: none;
+      transition: opacity 0.16s;
     }
-
-    // ====== 確認數字邏輯（簡化版） ======
-    const confirmBtn = document.getElementById("confirm-number-btn");
-    confirmBtn.addEventListener("click", () => {
-      if (gameOver) return;
-      const val = parseInt(guessInput.value, 10);
-      if (isNaN(val)) {
-        gameStatus.textContent = "請先輸入或說出一個數字。";
-        return;
-      }
-      if (val < min || val > max) {
-        gameStatus.textContent = "數字必須在目前範圍內（" + min + " ~ " + max + "）。";
-        speakText("數字超出範圍，請重新說一個。");
-        return;
-      }
-
-      // 這裡未做「玩家說確認」的語音流程，只是直接確認按鈕
-      if (val === secret) {
-        gameOver = true;
-        gameStatus.textContent = "玩家「" + players[currentPlayerIndex] + "」說中了終極密碼：" + secret + "！";
-        speakText("恭喜玩家 " + players[currentPlayerIndex] + "，你說中了終極密碼 " + secret + "。遊戲結束！");
-        if (recognition && recognizing) {
-          recognition.stop();
-          toggleVoiceBtn.textContent = "啟動語音輸入";
-        }
-        return;
-      }
-
-      if (val < secret) {
-        min = val;
-      } else {
-        max = val;
-      }
-      updateRangeDisplay();
-
-      gameStatus.textContent = "「" + players[currentPlayerIndex] + "」猜了 " + val + "。終極密碼在 " + min + " 到 " + max + " 之間。";
-      speakText("終極密碼在 " + min + " 到 " + max + " 之間。");
-
-      nextPlayer();
-      guessInput.value = "";
-    });
-  </script>
-</body>
-</html>
+    .secret-card.revealed .secret-cover-strip {
+      opacity: 0;
+    }
+    .secret-card.revealed .secret-covered {
+      opacity: 0;
+    }
+    /* Boom overlay */
+    .boom-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease-out;
+      z-index: 50;
+    }
+    .boom-overlay.show {
+      opacity: 1;
+    }
+    .boom-emoji {
+      font-size: 120px;
+      filter: drop-shadow(0 0 30px rgba(248,113,113,0.9));
+      animation: boom-pop 0.5s ease-out;
+    }
+    @keyframes boom-pop {
+      0% { transform: scale(0.1) rotate(-20deg); opacity: 0; }
+      60% { transform: scale(1.15) rotate(3deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0); opacity: 1;
