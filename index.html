@@ -159,14 +159,15 @@
       margin-top: 8px;
     }
     .range-display {
-      font-size: 16px;
-      font-weight: 600;
+      font-size: 20px;
+      font-weight: 700;
       margin-top: 6px;
     }
     .player-display {
-      font-size: 15px;
+      font-size: 18px;
       margin-top: 4px;
       color: #e5e7eb;
+      font-weight: 600;
     }
     .error {
       color: #f87171;
@@ -413,6 +414,11 @@
     let currentPlayerIndex = 0;
     let gameOver = false;
 
+    // 語音確認狀態
+    let waitingConfirm = false;
+    let pendingNumber = null;
+    let numberDetectTimer = null;
+
     // ====== 語音合成（播報） ======
     function speakText(text) {
       if (!window.speechSynthesis) return;
@@ -431,9 +437,9 @@
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "square";
-      osc.frequency.value = 440;
+      osc.frequency.value = 480;
       gain.gain.setValueAtTime(0.001, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.5, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.6, ctx.currentTime + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
       osc.connect(gain).connect(ctx.destination);
       osc.start();
@@ -443,11 +449,16 @@
     function showBoom() {
       boomOverlay.classList.remove("hidden");
       boomOverlay.classList.add("show");
+      // 連續多次 beep，提升爆炸感
       playBeep();
-      setTimeout(() => {
-        boomOverlay.classList.remove("show");
-        boomOverlay.classList.add("hidden");
-      }, 900);
+      setTimeout(playBeep, 250);
+      setTimeout(playBeep, 500);
+      // 保持炸彈顯示，直到下一局重設
+    }
+
+    function hideBoom() {
+      boomOverlay.classList.remove("show");
+      boomOverlay.classList.add("hidden");
     }
 
     function updateRangeDisplay() {
@@ -481,8 +492,16 @@
       updateCurrentPlayerDisplay();
       secretValueEl.textContent = secret;
       resetSecretCard();
+      hideBoom();
 
+      // 重置語音相關狀態
       transcriptBox.textContent = "";
+      waitingConfirm = false;
+      pendingNumber = null;
+      if (numberDetectTimer) {
+        clearTimeout(numberDetectTimer);
+        numberDetectTimer = null;
+      }
       if (recognition && recognizing) {
         recognition.stop();
         toggleVoiceBtn.textContent = "啟動語音輸入";
@@ -492,7 +511,7 @@
       speakText("首先由 " + players[currentPlayerIndex] + " 開始，請說出你的數字。");
     }
 
-    // 開始遊戲：讀設定＋進入第一局
+    // 開始遊戲
     startGameBtn.addEventListener("click", () => {
       const count = parseInt(playerCountInput.value, 10) || 1;
       const tmpNames = [];
@@ -519,13 +538,13 @@
       initRound();
     });
 
-    // 再來一局：保留設定與玩家，只重置本局
+    // 再來一局
     newRoundBtn.addEventListener("click", () => {
       if (!players.length) return;
       initRound();
     });
 
-    // 重新設定：整體歸零
+    // 重新設定
     restartBtn.addEventListener("click", () => {
       window.location.reload();
     });
@@ -588,16 +607,36 @@
             interimTranscript += text + " ";
           }
         }
-        transcriptBox.textContent = finalTranscript || interimTranscript;
+        const textAll = (finalTranscript || interimTranscript).trim();
+        if (!textAll) return;
+        transcriptBox.textContent = textAll;
 
-        const combined = (finalTranscript || interimTranscript).replace(/[^0-9]/g, " ");
-        const parts = combined.split(" ").filter(Boolean);
-        if (parts.length > 0) {
-          const num = parseInt(parts[0], 10);
-          if (!isNaN(num)) {
-            guessInput.value = num;
+        // 說「確認」時處理
+        if (waitingConfirm && /確認/.test(textAll)) {
+          waitingConfirm = false;
+          if (pendingNumber !== null) {
+            guessInput.value = pendingNumber;
+            speakText("好的，已確認 " + pendingNumber + "。");
           }
+          return;
         }
+
+        // 多位數處理：抓連續數字片段，如 394
+        const match = textAll.match(/(\d{1,3})/); // 1~3 位數
+        if (!match) return;
+        const num = parseInt(match[1], 10);
+        if (isNaN(num)) return;
+
+        pendingNumber = num;
+        // 每次偵測到數字先更新輸入框
+        guessInput.value = num;
+
+        // 停留約 1 秒，若期間沒有新的數字覆蓋，才複誦詢問
+        if (numberDetectTimer) clearTimeout(numberDetectTimer);
+        numberDetectTimer = setTimeout(() => {
+          waitingConfirm = true;
+          speakText("你剛剛說的是 " + pendingNumber + " 嗎？如果是，請說「確認」。");
+        }, 1000);
       };
 
       toggleVoiceBtn.addEventListener("click", () => {
@@ -613,7 +652,7 @@
       });
     }
 
-    // ====== 確認數字邏輯（含懸疑語音，簡化版確認流程） ======
+    // ====== 確認數字邏輯 ======
     const confirmBtn = document.getElementById("confirm-number-btn");
     confirmBtn.addEventListener("click", () => {
       if (gameOver) return;
@@ -628,7 +667,6 @@
         return;
       }
 
-      // 簡單語音複誦＋懸疑感
       speakText("你確定是 " + val + " 嗎？好，我來看看……");
 
       if (val === secret) {
