@@ -15,7 +15,7 @@
     }
     h1 {
       font-size: 22px;
-      margin-bottom: 12px;
+      margin: 0 0 12px;
       letter-spacing: 0.08em;
     }
     .card {
@@ -134,4 +134,531 @@
     }
     .dot.active {
       background: #22c55e;
-      box-shadow: 0 0 0 5px rgba
+      box-shadow: 0 0 0 5px rgba(34,197,94,0.33);
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.25); opacity: 0.7;}
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .transcript-box {
+      background: #020617;
+      border-radius: 12px;
+      padding: 8px 10px;
+      min-height: 44px;
+      margin-top: 6px;
+      font-size: 15px;
+      border: 1px dashed #4b5563;
+      word-break: break-all;
+      line-height: 1.4;
+    }
+    .transcript-label {
+      font-size: 13px;
+      color: #a5b4fc;
+      margin-top: 8px;
+    }
+    .range-display {
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+    .player-display {
+      font-size: 15px;
+      margin-top: 4px;
+      color: #e5e7eb;
+    }
+    .error {
+      color: #f87171;
+      font-size: 13px;
+      margin-top: 4px;
+      min-height: 16px;
+    }
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    /* 終極密碼卡牌 */
+    .secret-card {
+      width: 120px;
+      height: 64px;
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,0.4);
+      background: radial-gradient(circle at 0 0,#1e293b,#020617);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(15,23,42,0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.16s ease-out, box-shadow 0.16s;
+    }
+    .secret-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px rgba(15,23,42,0.95);
+    }
+    .secret-label {
+      position: absolute;
+      top: 6px;
+      left: 10px;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #9ca3af;
+    }
+    .secret-value {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    .secret-covered {
+      font-size: 13px;
+      color: #e5e7eb;
+    }
+    .secret-cover-strip {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        135deg,
+        rgba(30,64,175,0.4) 0,
+        rgba(30,64,175,0.4) 6px,
+        rgba(15,23,42,0.98) 6px,
+        rgba(15,23,42,0.98) 12px
+      );
+      opacity: 0.9;
+      pointer-events: none;
+      transition: opacity 0.16s;
+    }
+    .secret-card.revealed .secret-cover-strip {
+      opacity: 0;
+    }
+    .secret-card.revealed .secret-covered {
+      opacity: 0;
+    }
+    /* Boom overlay */
+    .boom-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease-out;
+      z-index: 50;
+    }
+    .boom-overlay.show {
+      opacity: 1;
+    }
+    .boom-emoji {
+      font-size: 120px;
+      filter: drop-shadow(0 0 30px rgba(248,113,113,0.9));
+      animation: boom-pop 0.5s ease-out;
+    }
+    @keyframes boom-pop {
+      0% { transform: scale(0.1) rotate(-20deg); opacity: 0; }
+      60% { transform: scale(1.15) rotate(3deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0); opacity: 1; }
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>終極密碼（語音版 Demo）</h1>
+
+  <!-- Boom 特效 -->
+  <div id="boom-overlay" class="boom-overlay hidden">
+    <div class="boom-emoji">💣</div>
+  </div>
+
+  <!-- 設定區 -->
+  <div class="card" id="setup-card">
+    <h2 style="font-size:18px; margin:0 0 8px;">遊戲設定</h2>
+
+    <label>
+      遊戲人數
+      <input type="number" id="player-count" min="1" max="8" value="2" />
+    </label>
+
+    <div id="player-names-wrapper"></div>
+
+    <div class="flex">
+      <div>
+        <label>
+          最小數字
+          <input type="number" id="min-number" value="0" />
+        </label>
+      </div>
+      <div>
+        <label>
+          最大數字
+          <input type="number" id="max-number" value="100" />
+        </label>
+      </div>
+    </div>
+
+    <label>
+      音效
+      <select id="sound-setting">
+        <option value="on">開啟</option>
+        <option value="off">關閉</option>
+      </select>
+    </label>
+
+    <button class="primary" id="start-game-btn">開始遊戲</button>
+    <div class="status" id="setup-status"></div>
+  </div>
+
+  <!-- 遊戲區 -->
+  <div class="card hidden" id="game-card">
+    <div class="top-row">
+      <div>
+        <h2 style="font-size:18px; margin:0 0 4px;">遊戲進行中</h2>
+        <div class="range-display">
+          目前範圍：<span id="range-text"></span>
+        </div>
+        <div class="player-display">
+          輪到：<span id="current-player-name"></span>
+        </div>
+      </div>
+      <div>
+        <div class="secret-card" id="secret-card">
+          <div class="secret-label">SECRET</div>
+          <div class="secret-value hidden" id="secret-value"></div>
+          <div class="secret-covered" id="secret-covered">點此查看</div>
+          <div class="secret-cover-strip"></div>
+        </div>
+      </div>
+    </div>
+
+    <label style="margin-top:10px;">
+      目前猜測數字（可手動改）
+      <input type="number" id="guess-input" />
+    </label>
+
+    <!-- 語音控制 -->
+    <div class="voice-status">
+      <span class="dot" id="mic-dot"></span>
+      <span id="mic-status-text">尚未啟動麥克風</span>
+    </div>
+    <button class="secondary" id="toggle-voice-btn">啟動語音輸入</button>
+    <div class="error" id="voice-error"></div>
+
+    <div class="transcript-label">語音辨識文字：</div>
+    <div class="transcript-box" id="transcript-box"></div>
+
+    <button class="primary" id="confirm-number-btn">這個數字，確認！</button>
+
+    <div class="btn-row">
+      <button class="secondary" id="new-round-btn">再來一局</button>
+      <button class="danger" id="restart-btn">重新設定</button>
+    </div>
+
+    <div class="status" id="game-status"></div>
+  </div>
+
+  <script>
+    // ====== 動態玩家輸入欄位 ======
+    const playerCountInput = document.getElementById("player-count");
+    const playerNamesWrapper = document.getElementById("player-names-wrapper");
+
+    function renderPlayerInputs() {
+      const count = parseInt(playerCountInput.value, 10) || 1;
+      playerNamesWrapper.innerHTML = "";
+      for (let i = 0; i < count; i++) {
+        const label = document.createElement("label");
+        label.textContent = "玩家 " + (i + 1) + " 稱呼";
+        const input = document.createElement("input");
+        input.type = "text";
+        input.id = "player-name-" + i;
+        input.placeholder = "例如：Lin";
+        label.appendChild(document.createElement("br"));
+        label.appendChild(input);
+        playerNamesWrapper.appendChild(label);
+      }
+    }
+    playerCountInput.addEventListener("change", renderPlayerInputs);
+    renderPlayerInputs();
+
+    // ====== 遊戲狀態 ======
+    const setupCard = document.getElementById("setup-card");
+    const gameCard = document.getElementById("game-card");
+    const setupStatus = document.getElementById("setup-status");
+    const gameStatus = document.getElementById("game-status");
+    const startGameBtn = document.getElementById("start-game-btn");
+    const restartBtn = document.getElementById("restart-btn");
+    const newRoundBtn = document.getElementById("new-round-btn");
+
+    const minNumberInput = document.getElementById("min-number");
+    const maxNumberInput = document.getElementById("max-number");
+    const soundSetting = document.getElementById("sound-setting");
+
+    const rangeText = document.getElementById("range-text");
+    const currentPlayerNameEl = document.getElementById("current-player-name");
+    const guessInput = document.getElementById("guess-input");
+
+    const secretCard = document.getElementById("secret-card");
+    const secretValueEl = document.getElementById("secret-value");
+    const secretCoveredEl = document.getElementById("secret-covered");
+
+    const boomOverlay = document.getElementById("boom-overlay");
+
+    let players = [];
+    let min = 0;
+    let max = 100;
+    let secret = 0;
+    let currentPlayerIndex = 0;
+    let gameOver = false;
+
+    // ====== 語音合成（播報） ======
+    function speakText(text) {
+      if (!window.speechSynthesis) return;
+      if (soundSetting.value === "off") return;
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "zh-TW";
+      window.speechSynthesis.speak(utter);
+    }
+
+    // 簡單 beep 音效（猜中時）
+    function playBeep() {
+      if (soundSetting.value === "off") return;
+      if (!window.AudioContext && !window.webkitAudioContext) return;
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "square";
+      osc.frequency.value = 440;
+      gain.gain.setValueAtTime(0.001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.5, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+    }
+
+    function showBoom() {
+      boomOverlay.classList.remove("hidden");
+      boomOverlay.classList.add("show");
+      playBeep();
+      setTimeout(() => {
+        boomOverlay.classList.remove("show");
+        boomOverlay.classList.add("hidden");
+      }, 900);
+    }
+
+    function updateRangeDisplay() {
+      rangeText.textContent = min + " ~ " + max;
+    }
+
+    function updateCurrentPlayerDisplay() {
+      currentPlayerNameEl.textContent = players[currentPlayerIndex];
+    }
+
+    function nextPlayer() {
+      currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+      updateCurrentPlayerDisplay();
+      speakText("輪到 " + players[currentPlayerIndex] + "，請說出你的數字。");
+    }
+
+    function resetSecretCard() {
+      secretCard.classList.remove("revealed");
+      secretValueEl.classList.add("hidden");
+      secretCoveredEl.textContent = "點此查看";
+    }
+
+    // 初始化單一局
+    function initRound() {
+      secret = Math.floor(Math.random() * (max - min + 1)) + min;
+      currentPlayerIndex = 0;
+      gameOver = false;
+      gameStatus.textContent = "";
+      guessInput.value = "";
+      updateRangeDisplay();
+      updateCurrentPlayerDisplay();
+      secretValueEl.textContent = secret;
+      resetSecretCard();
+
+      transcriptBox.textContent = "";
+      if (recognition && recognizing) {
+        recognition.stop();
+        toggleVoiceBtn.textContent = "啟動語音輸入";
+      }
+
+      speakText("新的一局開始。終極密碼在 " + min + " 到 " + max + " 之間。");
+      speakText("首先由 " + players[currentPlayerIndex] + " 開始，請說出你的數字。");
+    }
+
+    // 開始遊戲：讀設定＋進入第一局
+    startGameBtn.addEventListener("click", () => {
+      const count = parseInt(playerCountInput.value, 10) || 1;
+      const tmpNames = [];
+      for (let i = 0; i < count; i++) {
+        const input = document.getElementById("player-name-" + i);
+        tmpNames.push(input.value.trim() || "玩家" + (i + 1));
+      }
+      const minVal = parseInt(minNumberInput.value, 10);
+      const maxVal = parseInt(maxNumberInput.value, 10);
+
+      if (isNaN(minVal) || isNaN(maxVal) || minVal >= maxVal) {
+        setupStatus.textContent = "請確認最小/最大數字設定正確（最小 < 最大）。";
+        return;
+      }
+
+      players = tmpNames;
+      min = minVal;
+      max = maxVal;
+
+      setupStatus.textContent = "";
+      setupCard.classList.add("hidden");
+      gameCard.classList.remove("hidden");
+
+      initRound();
+    });
+
+    // 再來一局：保留設定與玩家，只重置本局
+    newRoundBtn.addEventListener("click", () => {
+      if (!players.length) return;
+      initRound();
+    });
+
+    // 重新設定：整體歸零
+    restartBtn.addEventListener("click", () => {
+      window.location.reload();
+    });
+
+    // 終極密碼卡牌翻牌
+    secretCard.addEventListener("click", () => {
+      const revealed = secretCard.classList.toggle("revealed");
+      if (revealed) {
+        secretValueEl.classList.remove("hidden");
+        secretCoveredEl.textContent = "";
+      } else {
+        resetSecretCard();
+      }
+    });
+
+    // ====== 語音辨識（Web Speech API） ======
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const toggleVoiceBtn = document.getElementById("toggle-voice-btn");
+    const micDot = document.getElementById("mic-dot");
+    const micStatusText = document.getElementById("mic-status-text");
+    const transcriptBox = document.getElementById("transcript-box");
+    const voiceError = document.getElementById("voice-error");
+
+    let recognition = null;
+    let recognizing = false;
+
+    if (!SpeechRecognition) {
+      toggleVoiceBtn.disabled = true;
+      micStatusText.textContent = "此瀏覽器不支援語音辨識，請改用 Chrome / Edge。";
+      voiceError.textContent = "";
+    } else {
+      recognition = new SpeechRecognition();
+      recognition.lang = "zh-TW";
+      recognition.continuous = true;
+      recognition.interimResults = true;
+
+      recognition.onstart = () => {
+        recognizing = true;
+        micDot.classList.add("active");
+        micStatusText.textContent = "正在聽你說話，請說出數字。";
+        voiceError.textContent = "";
+      };
+      recognition.onerror = (event) => {
+        voiceError.textContent = "語音辨識發生錯誤：" + event.error;
+      };
+      recognition.onend = () => {
+        recognizing = false;
+        micDot.classList.remove("active");
+        micStatusText.textContent = "語音辨識已停止。";
+      };
+      recognition.onresult = (event) => {
+        let finalTranscript = "";
+        let interimTranscript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          const text = result[0].transcript.trim();
+          if (result.isFinal) {
+            finalTranscript += text + " ";
+          } else {
+            interimTranscript += text + " ";
+          }
+        }
+        transcriptBox.textContent = finalTranscript || interimTranscript;
+
+        const combined = (finalTranscript || interimTranscript).replace(/[^0-9]/g, " ");
+        const parts = combined.split(" ").filter(Boolean);
+        if (parts.length > 0) {
+          const num = parseInt(parts[0], 10);
+          if (!isNaN(num)) {
+            guessInput.value = num;
+          }
+        }
+      };
+
+      toggleVoiceBtn.addEventListener("click", () => {
+        if (!recognizing) {
+          try {
+            recognition.start();
+            toggleVoiceBtn.textContent = "停止語音輸入";
+          } catch (e) {}
+        } else {
+          recognition.stop();
+          toggleVoiceBtn.textContent = "啟動語音輸入";
+        }
+      });
+    }
+
+    // ====== 確認數字邏輯（含懸疑語音，簡化版確認流程） ======
+    const confirmBtn = document.getElementById("confirm-number-btn");
+    confirmBtn.addEventListener("click", () => {
+      if (gameOver) return;
+      const val = parseInt(guessInput.value, 10);
+      if (isNaN(val)) {
+        gameStatus.textContent = "請先輸入或說出一個數字。";
+        return;
+      }
+      if (val < min || val > max) {
+        gameStatus.textContent = "數字必須在目前範圍內（" + min + " ~ " + max + "）。";
+        speakText("嗯……這個數字超出範圍，請再想一個。");
+        return;
+      }
+
+      // 簡單語音複誦＋懸疑感
+      speakText("你確定是 " + val + " 嗎？好，我來看看……");
+
+      if (val === secret) {
+        gameOver = true;
+        gameStatus.textContent = "玩家「" + players[currentPlayerIndex] + "」說中了終極密碼：" + secret + "！";
+        speakText("砰！就是這個數字！" + secret + "，你引爆了終極密碼！");
+        showBoom();
+        if (recognition && recognizing) {
+          recognition.stop();
+          toggleVoiceBtn.textContent = "啟動語音輸入";
+        }
+        return;
+      }
+
+      if (val < secret) {
+        min = val;
+        speakText("呼，暫時安全。終極密碼比 " + val + " 大。");
+      } else {
+        max = val;
+        speakText("差一點就爆了。終極密碼比 " + val + " 小。");
+      }
+      updateRangeDisplay();
+
+      gameStatus.textContent =
+        "「" + players[currentPlayerIndex] + "」猜了 " + val +
+        "。終極密碼在 " + min + " 到 " + max + " 之間。";
+
+      nextPlayer();
+      guessInput.value = "";
+    });
+  </script>
+</body>
+</html>
