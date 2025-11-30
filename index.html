@@ -666,7 +666,7 @@ function handleConfirm() {
   }
   if (val < min || val > max) {
     gameStatus.textContent = "數字必須在目前範圍內（" + min + " ~ " + max + "）。";
-    speakText("嗯……這個數字超出範圍，請再想一個。");
+    speakText("嗯……請把腦袋帶出門!這個數字超出範圍，請再想一個。");
     return;
   }
 
@@ -675,7 +675,7 @@ function handleConfirm() {
   if (val === secret) {
     gameOver = true;
     gameStatus.textContent = "玩家「" + players[currentPlayerIndex] + "」說中了終極密碼：" + secret + "！";
-    speakText("砰！就是這個數字！" + secret + "，你引爆了終極密碼！");
+    speakText("OMG！沒事才怪，就是這個數字！" + secret + "，你這個倒楣鬼引爆了終極密碼！");
     showBoom();
     if (recognition && recognizing) {
       recognition.stop();
@@ -686,10 +686,10 @@ function handleConfirm() {
 
   if (val < secret) {
     min = val;
-    speakText("呼，暫時安全。終極密碼比 " + val + " 大。");
+    speakText("OMG，沒事沒事暫時安全。終極密碼比 " + val + " 大。");
   } else {
     max = val;
-    speakText("差一點就爆了。終極密碼比 " + val + " 小。");
+    speakText("OMG，超扯!超扯!差一點就爆了。終極密碼比 " + val + " 小。");
   }
   updateRangeDisplay();
 
